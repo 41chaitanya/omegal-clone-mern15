@@ -11,6 +11,12 @@ OmeGal is a full-stack web application built with React and Node.js. This projec
 **Instructor:** Chaitanya Sharma  
 **Instagram:** [@chaitanya.sharrma](https://instagram.com/chaitanya.sharrma)
 
+## Job Resources
+
+[Job Resources](https://drive.google.com/drive/folders/1uUyQaiQNdGZQQM2lN1cYl6q1KxkZS6K5?usp=sharing)
+
+**Email:** chaitanya4141sharma@gmail.com
+
 ---
 
 ## Project Structure
