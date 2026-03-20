@@ -52,10 +52,10 @@ io.on('connection', (socket) => {
     })
   })
   
-  socket.on("ice",(data)=>{
+  socket.on("ice-candidate",(data)=>{
 
-    io.to(data.targetId).emit("ice",{
-        ice:data.ice,
+    io.to(data.targetId).emit("ice-candidate",{
+        candidate:data.candidate,
         sender:socket.id
     })
   })

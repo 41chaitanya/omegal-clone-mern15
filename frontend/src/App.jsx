@@ -15,10 +15,14 @@ function App() {
 
 
 const connectPC=()=>{
-  pc.current=new RTCPeerConnection()
+  pc.current=new RTCPeerConnection({
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }
+  ]
+})
   //bahut sari chize 
 }
-
+    
   const sendOffer = async() => {
   connectPC()
    const offer=await pc.current.createOffer()
@@ -74,17 +78,33 @@ const connectPC=()=>{
     connectPC()
 
     await pc.current.setRemoteDescription(data.offer);
-    await pc.current.createAnswer()
+    
+    
     console.log("answer created ")
+    
+    const answer=await pc.current.createAnswer()
+    await pc.current.setLocalDescription(answer)
 
-    // emit("answer",{
-    //   answer:answer,
-    //   targetId:targetID
-    // })
+    socket.emit("answer",{
+      answer:answer,
+     targetId:targetId
+    })
 
-    /// thoda orr 
+
 
    })
+
+   socket.on("answer",async(data)=>{
+    await pc.current.setRemoteDescription(data.answer)
+   })
+
+
+
+   const getCamera=()=>{
+    
+   }
+
+
   }, []);
 
   return (
