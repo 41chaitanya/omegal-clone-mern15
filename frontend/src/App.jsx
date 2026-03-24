@@ -11,32 +11,42 @@ function App() {
   const [message, setMessage] = useState("");
   const [allMessage, setAllMessage] = useState([]);
 
-  const pc=useRef(null)
+  const pc = useRef(null);
+  const remoteRef=useRef(null)
 
+ 
 
-const connectPC=()=>{
-  pc.current=new RTCPeerConnection({
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" }
-  ]
-})
-  //bahut sari chize 
-}
-    
-  const sendOffer = async() => {
-  connectPC()
-   const offer=await pc.current.createOffer()
-   await pc.current.setLocalDescription(offer)
-    console.log("offer. created !!")
+  // Peer connection setup karna with ICE candidate handling
+  const connectPC = () => {
+    pc.current = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302"}
+      ],
+    });
+    pc.current.onicecandidate=(event)=>{
+      if(event.candidate){
+        socket.emit("ice-candidate",{
+          targetId:remoteRef.current,
+          candidate:event.candidate
+        })
+      }
+    }
+ 
+  };
 
+  const sendOffer = async () => {
+    console.log("send offer called. ");
 
-
-   socket.emit("offer",{
-    targetId:targetId,
-    offer:offer
-   })
-
-   
+    remoteRef.current=targetId
+    connectPC();
+    const offer = await pc.current.createOffer();
+    await pc.current.setLocalDescription(offer);
+    console.log("offer. created !!");
+    socket.emit("offer", {
+      targetId: targetId,
+      offer: offer,
+    });
   };
 
   const sendMessage = () => {
@@ -73,38 +83,43 @@ const connectPC=()=>{
       ]);
     });
 
+    socket.on("offer", async (data) => {
+      console.log("offer in client. that forwarded", data.sender, data.offer)
+      remoteRef.current=data.sender
+      connectPC();
 
-   socket.on("offer",async(data)=>{
-    connectPC()
+      await pc.current.setRemoteDescription(data.offer);
 
-    await pc.current.setRemoteDescription(data.offer);
-    
-    
-    console.log("answer created ")
-    
-    const answer=await pc.current.createAnswer()
-    await pc.current.setLocalDescription(answer)
+      console.log("answer created ");
 
-    socket.emit("answer",{
-      answer:answer,
-     targetId:targetId
+      const answer = await pc.current.createAnswer();
+      await pc.current.setLocalDescription(answer);
+
+      socket.emit("answer", {
+        answer: answer,
+        targetId: data.sender,
+      });
+    });
+
+
+
+
+    socket.on("ice-candidate",(data)=>{
+
+      if(pc.current&&data.candidate){
+
+
+        pc.current.addIceCandidate(new RTCIceCandidate(data.candidate))
+      }
     })
 
 
+    socket.on("answer", async (data) => {
+      console.log("answer form. server. in client ", data.sender, data.answer)
+      await pc.current.setRemoteDescription(data.answer);
+    });
 
-   })
-
-   socket.on("answer",async(data)=>{
-    await pc.current.setRemoteDescription(data.answer)
-   })
-
-
-
-   const getCamera=()=>{
     
-   }
-
-
   }, []);
 
   return (
